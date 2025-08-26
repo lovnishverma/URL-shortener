@@ -1,4 +1,4 @@
-// Import Firebase functions
+// script.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
@@ -17,15 +17,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// DOM Elements
 const urlInput = document.getElementById('url-input');
 const shortenBtn = document.getElementById('shorten-btn');
 const urlList = document.getElementById('url-list');
 const errorContainer = document.getElementById('error-container');
 
-// Repository folder path for GitHub Pages
-const repoPath = '/URL-shortener'; // change if your repo name changes
-
-// Generate short code
+// Generate random short code
 function generateShort() {
   return Math.random().toString(36).substring(2, 8);
 }
@@ -40,7 +38,7 @@ function isValidUrl(string) {
   }
 }
 
-// Show error
+// Show error message
 function showError(message) {
   errorContainer.innerHTML = `<div class="error">${message}</div>`;
   setTimeout(() => {
@@ -48,7 +46,7 @@ function showError(message) {
   }, 5000);
 }
 
-// Copy URL
+// Copy URL to clipboard
 async function copyUrl(shortUrl, button) {
   try {
     await navigator.clipboard.writeText(shortUrl);
@@ -60,26 +58,31 @@ async function copyUrl(shortUrl, button) {
       button.style.background = '#4CAF50';
     }, 1500);
   } catch (err) {
-    alert('Failed to copy URL.');
+    alert('Failed to copy to clipboard.');
   }
 }
 
 // Delete URL
 async function deleteUrl(docId) {
   if (!confirm('Are you sure you want to delete this URL?')) return;
-  await deleteDoc(doc(db, 'urls', docId));
-  loadUrls();
+  try {
+    await deleteDoc(doc(db, 'urls', docId));
+    loadUrls();
+  } catch (err) {
+    console.error(err);
+    showError('Failed to delete URL.');
+  }
 }
 
 // Display URLs
-function displayUrls(urls) {
-  if (urls.length === 0) {
+function displayUrls(docs) {
+  if (docs.length === 0) {
     urlList.innerHTML = '<li class="empty-state">No URLs shortened yet. Create your first short link above!</li>';
     return;
   }
 
   urlList.innerHTML = '';
-  urls.forEach((docItem, index) => {
+  docs.forEach((docItem, index) => {
     const data = docItem.data();
     const li = document.createElement('li');
     li.className = 'url-item';
@@ -87,26 +90,25 @@ function displayUrls(urls) {
 
     li.innerHTML = `
       <div class="url-content">
-        <a href="${data.original}" target="_blank" class="short-url">${data.short}</a>
+        <a href="${data.short}" target="_blank" class="short-url">${data.short}</a>
         <div class="original-url">${data.original}</div>
       </div>
       <div>
         <button class="copy-btn">Copy</button>
-        <button class="copy-btn" style="background:#E53935;margin-left:10px;">Delete</button>
+        <button class="copy-btn" style="background:#f44336;margin-left:5px;">Delete</button>
       </div>
     `;
 
-    const copyButton = li.querySelector('.copy-btn:first-child');
-    copyButton.addEventListener('click', () => copyUrl(data.short, copyButton));
-
-    const deleteButton = li.querySelector('.copy-btn:last-child');
-    deleteButton.addEventListener('click', () => deleteUrl(docItem.id));
+    // Copy button
+    li.querySelectorAll('.copy-btn')[0].addEventListener('click', (e) => copyUrl(data.short, e.target));
+    // Delete button
+    li.querySelectorAll('.copy-btn')[1].addEventListener('click', () => deleteUrl(docItem.id));
 
     urlList.appendChild(li);
   });
 }
 
-// Load URLs
+// Load URLs from Firestore
 async function loadUrls() {
   try {
     const q = query(collection(db, 'urls'), orderBy('timestamp', 'desc'), limit(50));
@@ -114,14 +116,14 @@ async function loadUrls() {
     displayUrls(querySnapshot.docs);
   } catch (err) {
     console.error(err);
-    urlList.innerHTML = '<li class="empty-state">Unable to load URLs. Try again later.</li>';
+    urlList.innerHTML = '<li class="empty-state">Unable to load URLs. Please try again later.</li>';
   }
 }
 
 // Shorten URL
 shortenBtn.addEventListener('click', async () => {
   const original = urlInput.value.trim();
-  
+
   if (!original) {
     showError('Please enter a URL!');
     urlInput.focus();
@@ -129,7 +131,7 @@ shortenBtn.addEventListener('click', async () => {
   }
 
   if (!isValidUrl(original)) {
-    showError('Please enter a valid URL (must start with http:// or https://)');
+    showError('Please enter a valid URL (http:// or https://)');
     urlInput.focus();
     return;
   }
@@ -139,13 +141,21 @@ shortenBtn.addEventListener('click', async () => {
 
   try {
     const shortCode = generateShort();
+    const repoPath = window.location.pathname.replace(/\/index\.html$/, '');
     const short = `${window.location.origin}${repoPath}/r/${shortCode}`;
-    await addDoc(collection(db, 'urls'), { original, short, timestamp: new Date() });
+
+    await addDoc(collection(db, 'urls'), {
+      original,
+      short,
+      shortCode,
+      timestamp: new Date()
+    });
+
     urlInput.value = '';
-    loadUrls();
+    await loadUrls();
   } catch (err) {
     console.error(err);
-    showError('Failed to shorten URL. Try again.');
+    showError('Failed to shorten URL.');
   } finally {
     shortenBtn.disabled = false;
     shortenBtn.textContent = 'Shorten URL';
