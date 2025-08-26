@@ -46,8 +46,8 @@ url-shortener/
 
 1. **Clone or Download**
    ```bash
-   git clone <repository-url>
-   cd url-shortener
+   git clone https://github.com/lovnishverma/URL-shortener.git
+   cd URL-shortener
    ```
 
 2. **Open the Application**
