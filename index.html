@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 600px;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    #url-input {
+      flex: 1;
+      padding: 15px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s ease;
+      min-width: 300px;
+    }
+
+    #url-input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    #shorten-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    #shorten-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    #shorten-btn:active {
+      transform: translateY(0);
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 10px;
+    }
+
+    #url-list {
+      list-style: none;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    #url-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #url-list::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+
+    #url-list::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+
+    .url-item {
+      background: #f8f9ff;
+      border: 1px solid #e6e9ff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+      animation: slideIn 0.4s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .url-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    }
+
+    .url-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .short-url {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      display: block;
+      margin-bottom: 5px;
+      word-break: break-all;
+    }
+
+    .short-url:hover {
+      text-decoration: underline;
+    }
+
+    .original-url {
+      color: #666;
+      font-size: 14px;
+      word-break: break-all;
+      opacity: 0.8;
+    }
+
+    .copy-btn {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin-left: 15px;
+    }
+
+    .copy-btn:hover {
+      background: #45a049;
+      transform: scale(1.05);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      padding: 40px 20px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      border: 2px dashed #ddd;
+    }
+
+    .loading {
+      text-align: center;
+      color: #667eea;
+      padding: 20px;
+      font-size: 16px;
+    }
+
+    .error {
+      background: #ffebee;
+      color: #c62828;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #c62828;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+        margin: 10px;
+      }
+
+      .input-container {
+        flex-direction: column;
+      }
+
+      #url-input {
+        min-width: auto;
+      }
+
+      .url-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+
+      .copy-btn {
+        margin-left: 0;
+        align-self: stretch;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔗 URL Shortener</h1>
+    <div class="input-container">
+      <input type="url" id="url-input" placeholder="Enter your URL here (e.g., https://example.com)">
+      <button id="shorten-btn">Shorten URL</button>
+    </div>
+    <div id="error-container"></div>
+    <h2>Shortened URLs</h2>
+    <ul id="url-list">
+      <li class="loading">Loading your URLs...</li>
+    </ul>
+  </div>
+
+  <script type="module">
+    // Import modular Firebase functions
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCE0ar8JMPjc9-LTKn8FSOBeriVsegtot4",
+      authDomain: "urlshortner-3cbda.firebaseapp.com",
+      projectId: "urlshortner-3cbda",
+      storageBucket: "urlshortner-3cbda.appspot.com",
+      messagingSenderId: "299618523499",
+      appId: "1:299618523499:web:bae9a63eb704bbda20142e",
+      measurementId: "G-3D652P2L90"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlInput = document.getElementById('url-input');
+    const shortenBtn = document.getElementById('shorten-btn');
+    const urlList = document.getElementById('url-list');
+    const errorContainer = document.getElementById('error-container');
+
+    // Generate short code
+    function generateShort() {
+      return Math.random().toString(36).substring(2, 8);
+    }
+
+    // Validate URL
+    function isValidUrl(string) {
+      try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // Show error message
+    function showError(message) {
+      errorContainer.innerHTML = `<div class="error">${message}</div>`;
+      setTimeout(() => {
+        errorContainer.innerHTML = '';
+      }, 5000);
+    }
+
+    // Copy URL to clipboard
+    async function copyUrl(shortUrl) {
+      try {
+        await navigator.clipboard.writeText(shortUrl);
+        
+        // Create temporary feedback
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.style.background = '#2196F3';
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.style.background = '#4CAF50';
+        }, 1500);
+      } catch (err) {
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = shortUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Copied to clipboard!');
+      }
+    }
+
+    // Make copyUrl globally available
+    window.copyUrl = copyUrl;
+
+    // Display URLs
+    function displayUrls(urls) {
+      if (urls.length === 0) {
+        urlList.innerHTML = '<li class="empty-state">No URLs shortened yet. Create your first short link above!</li>';
+        return;
+      }
+
+      urlList.innerHTML = '';
+      urls.forEach((doc, index) => {
+        const data = doc.data();
+        const li = document.createElement('li');
+        li.className = 'url-item';
+        li.style.animationDelay = `${index * 0.1}s`;
+        
+        li.innerHTML = `
+          <div class="url-content">
+            <a href="${data.original}" target="_blank" class="short-url">${data.short}</a>
+            <div class="original-url">${data.original}</div>
+          </div>
+          <button class="copy-btn" onclick="copyUrl('${data.short}')">Copy</button>
+        `;
+        urlList.appendChild(li);
+      });
+    }
+
+    // Load URLs from Firestore
+    async function loadUrls() {
+      try {
+        const q = query(collection(db, 'urls'), orderBy('timestamp', 'desc'), limit(50));
+        const querySnapshot = await getDocs(q);
+        displayUrls(querySnapshot.docs);
+      } catch (error) {
+        console.error('Error loading URLs:', error);
+        urlList.innerHTML = '<li class="empty-state">Unable to load URLs. Please try again later.</li>';
+      }
+    }
+
+    // Shorten URL
+    shortenBtn.addEventListener('click', async () => {
+      const original = urlInput.value.trim();
+      
+      if (!original) {
+        showError('Please enter a URL!');
+        urlInput.focus();
+        return;
+      }
+
+      if (!isValidUrl(original)) {
+        showError('Please enter a valid URL (must start with http:// or https://)');
+        urlInput.focus();
+        return;
+      }
+
+      // Show loading state
+      shortenBtn.disabled = true;
+      shortenBtn.textContent = 'Shortening...';
+
+      try {
+        const short = window.location.origin + '/' + generateShort();
+        
+        await addDoc(collection(db, 'urls'), { 
+          original, 
+          short,
+          timestamp: new Date()
+        });
+        
+        urlInput.value = '';
+        await loadUrls();
+      } catch (error) {
+        console.error('Error shortening URL:', error);
+        showError('Failed to shorten URL. Please try again.');
+      } finally {
+        // Reset button state
+        shortenBtn.disabled = false;
+        shortenBtn.textContent = 'Shorten URL';
+      }
+    });
+
+    // Handle Enter key in input
+    urlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        shortenBtn.click();
+      }
+    });
+
+    // Initialize
+    loadUrls();
+  </script>
+</body>
+</html>
