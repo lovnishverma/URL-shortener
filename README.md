@@ -1,6 +1,6 @@
 # 🔗 URL Shortener
 
-A modern, responsive web application for shortening URLs with a beautiful user interface and real-time database storage using Firebase Firestore.
+A modern, responsive web application for shortening URLs with a beautiful user interface and real-time database storage using Firestore Database.
 
 ![Status](https://img.shields.io/badge/Status-Live-brightgreen) ![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5\&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3\&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript\&logoColor=black)
 
