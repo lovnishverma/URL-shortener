@@ -22,7 +22,7 @@ A modern, responsive web application for shortening URLs with a beautiful user i
 
 ## 🚀 Live Demo
 
-Open `index.html` in any modern web browser to start using the URL shortener immediately.
+[Click here to try the URL Shortener](https://lovnishverma.github.io/URL-shortener/)
 
 ---
 
@@ -116,6 +116,9 @@ service cloud.firestore {
 2. **Copy Shortened URL**
 
    * Click the "Copy" button to copy the URL to the clipboard
+
+   Your shortened URL format: `https://lovnishverma.github.io/URL-shortener/?r=abc123`
+
 
 3. **Delete URL**
 
