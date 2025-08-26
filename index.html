@@ -407,7 +407,8 @@
       shortenBtn.textContent = 'Shortening...';
 
       try {
-        const short = window.location.origin + '/' + generateShort();
+        const shortCode = generateShort();
+        const short = window.location.origin + '/r/' + shortCode;
         
         await addDoc(collection(db, 'urls'), { 
           original, 
