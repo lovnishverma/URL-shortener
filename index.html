@@ -99,6 +99,12 @@
       transform: translateY(0);
     }
 
+    #shorten-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     h2 {
       color: #333;
       margin-bottom: 20px;
@@ -408,7 +414,7 @@
 
       try {
         const shortCode = generateShort();
-        const short = window.location.origin + '/r/' + shortCode;
+        const short = window.location.origin + window.location.pathname.replace('/index.html', '').replace(/\/$/, '') + '/r/' + shortCode;
         
         await addDoc(collection(db, 'urls'), { 
           original, 
