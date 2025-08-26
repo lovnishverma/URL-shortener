@@ -4,15 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Redirecting...</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    .message {
+      background: rgba(0,0,0,0.6);
+      padding: 30px 40px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+    a {
+      color: #FFD700;
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecting, please wait...</p>
+  <div class="message">
+    <p>Redirecting, please wait...</p>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // Firebase config (same as script.js)
+    // 🔑 Firebase config (same as your project)
     const firebaseConfig = {
       apiKey: "AIzaSyCE0ar8JMPjc9-LTKn8FSOBeriVsegtot4",
       authDomain: "urlshortner-3cbda.firebaseapp.com",
@@ -27,31 +52,36 @@
     const db = getFirestore(app);
 
     async function redirect() {
-      const path = window.location.pathname; 
-      // extract short code (last segment)
+      // Extract shortCode from the URL
+      const path = window.location.pathname;
       const shortCode = path.split('/').pop();
 
-      if (!shortCode) return;
+      if (!shortCode) return showError("Invalid URL.");
 
       try {
-        const querySnapshot = await getDocs(collection(db, 'urls'));
-        let found = false;
+        // Query Firestore for the document with this shortCode
+        const q = query(collection(db, 'urls'), where('shortCode', '==', shortCode), limit(1));
+        const querySnapshot = await getDocs(q);
 
-        querySnapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.short.endsWith('/' + shortCode)) {
-            found = true;
-            window.location.href = data.original; // redirect to original URL
-          }
-        });
-
-        if (!found) {
-          document.body.innerHTML = "<p>URL not found. <a href='/URL-shortener/'>Go back</a></p>";
+        if (querySnapshot.empty) {
+          return showError("Short URL not found.");
         }
+
+        // Redirect to the original URL
+        const data = querySnapshot.docs[0].data();
+        window.location.href = data.original;
+
       } catch (err) {
         console.error(err);
-        document.body.innerHTML = "<p>Error loading URL. Please try again later.</p>";
+        showError("Error loading URL. Please try again later.");
       }
+    }
+
+    function showError(message) {
+      document.querySelector('.message').innerHTML = `
+        <p>${message}</p>
+        <p><a href="/URL-shortener/">Go back to URL Shortener</a></p>
+      `;
     }
 
     redirect();
